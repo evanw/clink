@@ -6,8 +6,7 @@
 ;   return 3;
 ; }
 
-BITS  64
-DEFAULT ABS
+bits 64
 
 %define CPU_SUBTYPE_X86_64_ALL 0x00000003
 %define CPU_TYPE_X86_64        0x01000007

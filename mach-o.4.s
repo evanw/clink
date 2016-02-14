@@ -1,5 +1,5 @@
 ; brew install nsam
-; /usr/local/bin/nasm mach-o.3.s -o out && chmod +x out && ./out; echo $?
+; /usr/local/bin/nasm mach-o.4.s -o out && chmod +x out && ./out; echo $?
 
 ; int main() {
 ;   puts("hello, world");
@@ -11,36 +11,24 @@ bits 64
 %define CPU_SUBTYPE_X86_64_ALL     0x00000003
 %define CPU_TYPE_X86_64            0x01000007
 %define INDIRECT_SYMBOL_ABS        0x40000000
-%define LC_DATA_IN_CODE            0x00000029
 %define LC_DYLD_INFO_ONLY          0x80000022
-%define LC_DYLIB_CODE_SIGN_DRS     0x0000002B
 %define LC_DYSYMTAB                0x0000000B
-%define LC_FUNCTION_STARTS         0x00000026
 %define LC_LOAD_DYLIB              0x0000000C
 %define LC_LOAD_DYLINKER           0x0000000E
 %define LC_MAIN                    0x80000028
 %define LC_SEGMENT_64              0x00000019
-%define LC_SOURCE_VERSION          0x0000002A
 %define LC_SYMTAB                  0x00000002
-%define LC_UUID                    0x0000001B
-%define LC_VERSION_MIN_MACOSX      0x00000024
-%define MH_DYLDLINK                0x00000004
 %define MH_EXECUTE                 0x00000002
 %define MH_MAGIC_64                0xFEEDFACF
-%define MH_NOUNDEFS                0x00000001
-%define MH_PIE                     0x00200000
-%define MH_TWOLEVEL                0x00000080
 %define N_EXT                      0x00000001
 %define N_OPT                      0x0000003C
 %define N_SECT                     0x0000000E
 %define NO_SECT                    0x00000000
 %define S_ATTR_PURE_INSTRUCTIONS   0x80000000
 %define S_ATTR_SOME_INSTRUCTIONS   0x00000400
-%define S_CSTRING_LITERALS         0x00000002
 %define S_LAZY_SYMBOL_POINTERS     0x00000007
 %define S_NON_LAZY_SYMBOL_POINTERS 0x00000006
 %define S_SYMBOL_STUBS             0x00000008
-%define S_ZEROFILL                 0x00000001
 %define VM_PROT_EXECUTE            0x00000004
 %define VM_PROT_READ               0x00000001
 %define VM_PROT_WRITE              0x00000002
@@ -77,9 +65,9 @@ text_start:
   dd CPU_TYPE_X86_64 ; cputype
   dd CPU_SUBTYPE_X86_64_ALL ; cpusubtype
   dd MH_EXECUTE ; filetype
-  dd 16 ; ncmds
+  dd 10 ; ncmds
   dd load_commands_end - load_commands_start ; sizeofcmds
-  dd MH_DYLDLINK | MH_NOUNDEFS | MH_PIE | MH_TWOLEVEL ; flags
+  dd 0 ; flags
   dd 0 ; reserved
 
 load_commands_start:
@@ -111,7 +99,7 @@ load_command_text_start:
   dq text_end - text_start ; filesize
   dd VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE ; maxprot
   dd VM_PROT_READ | VM_PROT_EXECUTE ; initprot
-  dd 6 ; nsects
+  dd 3 ; nsects
   dd 0 ; flags
 
 load_command_text_text_start:
@@ -165,57 +153,6 @@ load_command_text_stub_helper_start:
   dd 0 ; reserved3
 
 load_command_text_stub_helper_end:
-load_command_text_cstring_start:
-
-  ; struct section_64
-  db '__cstring', 0, 0, 0, 0, 0, 0, 0 ; sectname
-  db '__TEXT', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; segname
-  dq TEXT_ADDR + cstring_start ; addr
-  dq cstring_end - cstring_start ; size
-  dd cstring_start ; offset
-  dd 0 ; align
-  dd 0 ; reloff
-  dd 0 ; nreloc
-  dd S_CSTRING_LITERALS ; flags
-  dd 0 ; reserved1
-  dd 0 ; reserved2
-  dd 0 ; reserved3
-
-load_command_text_cstring_end:
-load_command_text_unwind_info_start:
-
-  ; struct section_64
-  db '__unwind_info', 0, 0, 0 ; sectname
-  db '__TEXT', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; segname
-  dq TEXT_ADDR + unwind_info_start ; addr
-  dq unwind_info_end - unwind_info_start ; size
-  dd unwind_info_start ; offset
-  dd 2 ; align
-  dd 0 ; reloff
-  dd 0 ; nreloc
-  dd 0 ; flags
-  dd 0 ; reserved1
-  dd 0 ; reserved2
-  dd 0 ; reserved3
-
-load_command_text_unwind_info_end:
-load_command_text_eh_frame_start:
-
-  ; struct section_64
-  db '__eh_frame', 0, 0, 0, 0, 0, 0 ; sectname
-  db '__TEXT', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; segname
-  dq TEXT_ADDR + eh_frame_start ; addr
-  dq eh_frame_end - eh_frame_start ; size
-  dd eh_frame_start ; offset
-  dd 3 ; align
-  dd 0 ; reloff
-  dd 0 ; nreloc
-  dd 0 ; flags
-  dd 0 ; reserved1
-  dd 0 ; reserved2
-  dd 0 ; reserved3
-
-load_command_text_eh_frame_end:
 load_command_text_end:
 load_command_data_start:
 
@@ -229,7 +166,7 @@ load_command_data_start:
   dq data_end - data_start ; filesize
   dd VM_PROT_READ | VM_PROT_WRITE | VM_PROT_EXECUTE ; maxprot
   dd VM_PROT_READ | VM_PROT_WRITE ; initprot
-  dd 3 ; nsects
+  dd 2 ; nsects
   dd 0 ; flags
 
 load_command_data_nl_symbol_ptr_start:
@@ -266,23 +203,6 @@ load_command_data_la_symbol_ptr_start:
   dd 0 ; reserved3
 
 load_command_data_la_symbol_ptr_end:
-load_command_data_bss_start:
-
-  ; struct section_64
-  db '__bss', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; sectname
-  db '__DATA', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; segname
-  dq DATA_ADDR + bss_start - data_start ; addr
-  dq 4 ; size
-  dd 0 ; offset
-  dd 2 ; align
-  dd 0 ; reloff
-  dd 0 ; nreloc
-  dd S_ZEROFILL ; flags
-  dd 0 ; reserved1
-  dd 0 ; reserved2
-  dd 0 ; reserved3
-
-load_command_data_bss_end:
 load_command_data_end:
 load_command_linkedit_start:
 
@@ -313,8 +233,8 @@ load_command_dyld_info_only_start:
   dd 0 ; weak_bind_size
   dd lazy_bind_start ; lazy_bind_off
   dd lazy_bind_end - lazy_bind_start ; lazy_bind_size
-  dd export_start ; export_off
-  dd export_end - export_start ; export_size
+  dd 0 ; export_off
+  dd 0 ; export_size
 
 load_command_dyld_info_only_end:
 load_command_symtab_start:
@@ -365,29 +285,6 @@ load_command_dylinker_name:
   align 8, db 0 ; padding
 
 load_command_dylinker_end:
-load_command_uuid_start:
-
-  dd LC_UUID ; cmd
-  dd load_command_uuid_end - load_command_uuid_start ; cmdsize
-  db 0x58, 0x9E, 0x52, 0x6A, 0x4D, 0xCF, 0x3F, 0x1C, 0x97, 0x04, 0xA5, 0x27, 0x63, 0x2B, 0x7D, 0x14 ; uuid
-
-load_command_uuid_end:
-load_command_min_macosx_start:
-
-  ; struct version_min_command
-  dd LC_VERSION_MIN_MACOSX ; cmd
-  dd load_command_min_macosx_end - load_command_min_macosx_start ; cmdsize
-  dd 10 << 16 | 10 << 8 ; version
-  dd 10 << 16 | 10 << 8 ; sdk
-
-load_command_min_macosx_end:
-load_command_source_version_start:
-
-  dd LC_SOURCE_VERSION ; cmd
-  dd load_command_source_version_end - load_command_source_version_start ; cmdsize
-  dq 0 ; version
-
-load_command_source_version_end:
 load_command_main_start:
 
   dd LC_MAIN ; cmd
@@ -403,7 +300,7 @@ load_command_load_dylib_start:
   dd load_command_load_dylib_end - load_command_load_dylib_start ; cmdsize
   dd load_command_load_dylib_name - load_command_load_dylib_start ; name
   dd 0 ; timestamp
-  dd 1213 << 16 ; current_version
+  dd 1 << 16 ; current_version
   dd 1 << 16 ; compatibility_version
 
 load_command_load_dylib_name:
@@ -411,35 +308,7 @@ load_command_load_dylib_name:
   align 8, db 0 ; padding
 
 load_command_load_dylib_end:
-load_command_function_starts_start:
-
-  ; struct linkedit_data_command
-  dd LC_FUNCTION_STARTS ; cmd
-  dd load_command_function_starts_end - load_command_function_starts_start ; cmdsize
-  dd function_starts_start ; dataoff
-  dd function_starts_end - function_starts_start ; datasize
-
-load_command_function_starts_end:
-load_command_data_in_code_start:
-
-  dd LC_DATA_IN_CODE ; cmd
-  dd load_command_data_in_code_end - load_command_data_in_code_start ; cmdsize
-  dd data_in_code_start ; dataoff
-  dd data_in_code_end - data_in_code_start ; datasize
-
-load_command_data_in_code_end:
-load_command_dylib_code_sign_drs_start:
-
-  dd LC_DYLIB_CODE_SIGN_DRS ; cmd
-  dd load_command_dylib_code_sign_drs_end - load_command_dylib_code_sign_drs_start ; cmdsize
-  dd command_dylib_code_sign_drs_start ; dataoff
-  dd command_dylib_code_sign_drs_end - command_dylib_code_sign_drs_start ; datasize
-
-load_command_dylib_code_sign_drs_end:
 load_commands_end:
-
-  times 2480 db 0
-
 code_start:
 
 main:
@@ -495,24 +364,6 @@ hello_world:
 
 cstring_end:
 
-  align 4, db 0
-
-unwind_info_start:
-
-  db 0x01, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x00, 0x00
-  db 0x00, 0x00, 0x00, 0x00, 0x1C, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x30, 0x0F, 0x00, 0x00
-  db 0x34, 0x00, 0x00, 0x00, 0x34, 0x00, 0x00, 0x00, 0x59, 0x0F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-  db 0x34, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x0C, 0x00, 0x01, 0x00, 0x10, 0x00, 0x01, 0x00
-  db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01
-
-unwind_info_end:
-eh_frame_start:
-
-  db 0x14, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x7A, 0x52, 0x00, 0x01, 0x78, 0x10, 0x01
-  db 0x10, 0x0C, 0x07, 0x08, 0x90, 0x01, 0x00, 0x00
-
-eh_frame_end:
-
   align PAGE_SIZE, db 0 ; padding
 
 text_end:
@@ -535,7 +386,6 @@ lazy_puts:
   dq stub_helper_puts + TEXT_ADDR
 
 la_symbol_ptr_end:
-bss_start:
 
   align PAGE_SIZE, db 0 ; padding
 
@@ -589,29 +439,6 @@ lazy_bind_puts:
   align 8, db 0 ; padding
 
 lazy_bind_end:
-export_start:
-
-  db 0x00, 0x01
-  db '__mh_execute_header', 0
-  db 0x17, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-  db 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-
-export_end:
-function_starts_start:
-
-  db 0xB0, 0x1E, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-
-function_starts_end:
-data_in_code_start:
-data_in_code_end:
-command_dylib_code_sign_drs_start:
-
-  db 0xFA, 0xDE, 0x0C, 0x05, 0x00, 0x00, 0x00, 0x3C, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00
-  db 0x00, 0x00, 0x00, 0x14, 0xFA, 0xDE, 0x0C, 0x00, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00, 0x00, 0x01
-  db 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00, 0x0B, 0x6C, 0x69, 0x62, 0x53
-  db 0x79, 0x73, 0x74, 0x65, 0x6D, 0x2E, 0x42, 0x00, 0x00, 0x00, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00
-
-command_dylib_code_sign_drs_end:
 symtab_start:
 
   ; struct nlist_64
