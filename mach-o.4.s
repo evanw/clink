@@ -1,3 +1,5 @@
+; This is a minimal Mach-O with dynamic linking hand-assembled using nasm.
+
 ; brew install nasm
 ; /usr/local/bin/nasm mach-o.4.s -o out && chmod +x out && ./out; echo $?
 

@@ -1,3 +1,5 @@
+; This is a minimal ELF compiled by gcc.
+
 ; brew install nasm
 ; /usr/local/bin/nasm elf.1.s -o out
 

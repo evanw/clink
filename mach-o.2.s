@@ -1,3 +1,5 @@
+; This is a minimal Mach-O hand-assembled using nasm with output.
+
 ; brew install nasm
 ; /usr/local/bin/nasm mach-o.2.s -o out && chmod +x out && ./out; echo $?
 
@@ -132,14 +134,14 @@ load_command_unixthread_end:
 load_commands_end:
 code_start:
 
-  ; write(2, "hello, world\n", 13)
+  ; write(2, "hello, world\n", 13);
   mov rax, strict dword 4 | SYSCALL_CLASS_UNIX
   mov rdi, strict dword 1
   mov rsi, strict dword data_start + PAGE_SIZE * 2
   mov rdx, strict dword 13
   syscall
 
-  ; exit(3)
+  ; exit(3);
   mov rax, strict dword 1 | SYSCALL_CLASS_UNIX
   mov rdi, strict dword 3
   syscall

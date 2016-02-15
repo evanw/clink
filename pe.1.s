@@ -1,3 +1,5 @@
+; This is a minimal PE hand-assembled using nasm with console output.
+
 ; brew install nasm
 ; /usr/local/bin/nasm pe.1.s -o out
 
