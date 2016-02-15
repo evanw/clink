@@ -1,7 +1,7 @@
-; This is a minimal PE compiled by Visual Studio Express 2015.
+; This is a minimal PE hand-assembled using nasm with console output.
 
 ; brew install nasm
-; /usr/local/bin/nasm pe.1.s -o out.exe
+; /usr/local/bin/nasm pe.2.s -o out.exe
 
 ; #include <windows.h>
 ;
@@ -34,22 +34,21 @@ bits 64
 %define FILE_ALIGNMENT 0x0200
 %define TEXT_ADDR      PAGE_SIZE
 %define RDATA_ADDR     TEXT_ADDR + PAGE_SIZE
-%define PDATA_ADDR     RDATA_ADDR + PAGE_SIZE
 
   ; struct IMAGE_DOS_HEADER
   db 'MZ' ; e_magic
-  dw 0x0090 ; e_cblp
-  dw 0x0003 ; e_cp
+  dw 0 ; e_cblp
+  dw 0 ; e_cp
   dw 0 ; e_crlc
-  dw 0x0004 ; e_cparhdr
+  dw 0 ; e_cparhdr
   dw 0 ; e_minalloc
-  dw 0xFFFF ; e_maxalloc
+  dw 0 ; e_maxalloc
   dw 0 ; e_ss
-  dw 0x00B8 ; e_sp
+  dw 0 ; e_sp
   dw 0 ; e_csum
   dw 0 ; e_ip
   dw 0 ; e_cs
-  dw 0x0040 ; e_lfarlc
+  dw 0 ; e_lfarlc
   dw 0 ; e_ovno
   dw 0, 0, 0, 0 ; e_res
   dw 0 ; e_oemid
@@ -57,26 +56,14 @@ bits 64
   dw 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ; e_res2
   dd pe_start ; e_lfanew
 
-dos_start:
-
-  db 0x0E, 0x1F, 0xBA, 0x0E, 0x00, 0xB4, 0x09, 0xCD, 0x21, 0xB8, 0x01, 0x4C, 0xCD, 0x21
-  db 'This program cannot be run in DOS mode.'
-  db 0x0D, 0x0D, 0x0A, 0x24, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x15, 0xC3, 0xA0, 0xC1, 0x51
-  db 0xA2, 0xCE, 0x92, 0x51, 0xA2, 0xCE, 0x92, 0x51, 0xA2, 0xCE, 0x92, 0x8C, 0x5D, 0x05, 0x92, 0x52
-  db 0xA2, 0xCE, 0x92, 0x51, 0xA2, 0xCF, 0x92, 0x52, 0xA2, 0xCE, 0x92, 0x83, 0xF9, 0xC7, 0x93, 0x50
-  db 0xA2, 0xCE, 0x92, 0x83, 0xF9, 0xCC, 0x93, 0x50, 0xA2, 0xCE, 0x92, 0x52, 0x69, 0x63, 0x68, 0x51
-  db 0xA2, 0xCE, 0x92, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-  db 0x00, 0x00, 0x00
-
-dos_end:
 pe_start:
 
   db 'PE', 0, 0
 
   ; struct IMAGE_FILE_HEADER
   dw IMAGE_FILE_MACHINE_AMD64 ; Machine
-  dw 3 ; NumberOfSections
-  dd 0x56C15BC5 ; TimeDateStamp
+  dw 2 ; NumberOfSections
+  dd 0 ; TimeDateStamp
   dd 0 ; PointerToSymbolTable
   dd 0 ; NumberOfSymbols
   dw optional_header_end - optional_header_start ; SizeOfOptionalHeader
@@ -86,7 +73,7 @@ optional_header_start:
 
   ; struct IMAGE_OPTIONAL_HEADER64
   dw 0x020B ; Magic
-  db 14 ; MajorLinkerVersion
+  db 0 ; MajorLinkerVersion
   db 0 ; MinorLinkerVersion
   dd rdata_start - text_start ; SizeOfCode
   dd pe_end - rdata_start ; SizeOfInitializedData
@@ -103,11 +90,11 @@ optional_header_start:
   dw 6 ; MajorSubsystemVersion
   dw 0 ; MinorSubsystemVersion
   dd 0 ; Win32VersionValue
-  dd 0x00004000 ; SizeOfImage
+  dd 0x00003000 ; SizeOfImage
   dd sections_end ; SizeOfHeaders
   dd 0 ; CheckSum
   dw IMAGE_SUBSYSTEM_WINDOWS_CUI ; Subsystem
-  dw IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE | IMAGE_DLLCHARACTERISTICS_NX_COMPAT | IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE | 0x0020 ; DllCharacteristics
+  dw IMAGE_DLLCHARACTERISTICS_NX_COMPAT | IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE ; DllCharacteristics
   dq 0x00100000 ; SizeOfStackReserve
   dq 0x00001000 ; SizeOfStackCommit
   dq 0x00100000 ; SizeOfHeapReserve
@@ -125,7 +112,7 @@ optional_header_start:
   dd 0, 0 ; DataDirectory[2]
 
   ; IMAGE_DIRECTORY_ENTRY_EXCEPTION
-  dd PDATA_ADDR + exception_start - pdata_start, exception_end - exception_start ; DataDirectory[3]
+  dd 0, 0 ; DataDirectory[3]
 
   ; IMAGE_DIRECTORY_ENTRY_SECURITY
   dd 0, 0 ; DataDirectory[4]
@@ -134,7 +121,7 @@ optional_header_start:
   dd 0, 0 ; DataDirectory[5]
 
   ; IMAGE_DIRECTORY_ENTRY_DEBUG
-  dd RDATA_ADDR + debug_start - rdata_start, debug_end - debug_start ; DataDirectory[6]
+  dd 0, 0 ; DataDirectory[6]
 
   ; IMAGE_DIRECTORY_ENTRY_ARCHITECTURE
   dd 0, 0 ; DataDirectory[7]
@@ -182,20 +169,8 @@ sections_start:
   db '.rdata', 0, 0 ; Name
   dd rdata_end - rdata_start ; VirtualSize
   dd RDATA_ADDR ; VirtualAddress
-  dd pdata_start - rdata_start ; SizeOfRawData
+  dd pe_end - rdata_start ; SizeOfRawData
   dd rdata_start ; PointerToRawData
-  dd 0 ; PointerToRelocations
-  dd 0 ; PointerToLinenumbers
-  dw 0 ; NumberOfRelocations
-  dw 0 ; NumberOfLinenumbers
-  dd IMAGE_SCN_MEM_READ | IMAGE_SCN_CNT_INITIALIZED_DATA ; Characteristics
-
-  ; struct IMAGE_SECTION_HEADER
-  db '.pdata', 0, 0 ; Name
-  dd pdata_end - pdata_start ; VirtualSize
-  dd PDATA_ADDR ; VirtualAddress
-  dd pe_end - pdata_start ; SizeOfRawData
-  dd pdata_start ; PointerToRawData
   dd 0 ; PointerToRelocations
   dd 0 ; PointerToLinenumbers
   dw 0 ; NumberOfRelocations
@@ -274,94 +249,6 @@ hello_world_end:
   align 8, db 0
 
 cstring_end:
-debug_start:
-
-  ; struct IMAGE_DEBUG_DIRECTORY
-  dd 0 ; Characteristics
-  dd 0x56C15BC5 ; TimeDateStamp
-  dw 0 ; MajorVersion
-  dw 0 ; MinorVersion
-  dd IMAGE_DEBUG_TYPE_POGO ; Type
-  dd link_time_code_gen_end - link_time_code_gen_start ; SizeOfData
-  dd RDATA_ADDR + link_time_code_gen_start - rdata_start ; AddressOfRawData
-  dd link_time_code_gen_start ; PointerToRawData
-
-  ; struct IMAGE_DEBUG_DIRECTORY
-  dd 0 ; Characteristics
-  dd 0x56C15BC5 ; TimeDateStamp
-  dw 0 ; MajorVersion
-  dw 0 ; MinorVersion
-  dd IMAGE_DEBUG_TYPE_ILTCG ; Type
-  dd 0 ; SizeOfData
-  dd 0 ; AddressOfRawData
-  dd 0 ; PointerToRawData
-
-debug_end:
-link_time_code_gen_start:
-
-  db 'GCTL'
-
-  dd TEXT_ADDR
-  dd text_end - text_start
-  db '.text$mn', 0
-  align 4, db 0
-
-  dd RDATA_ADDR + iat_start - rdata_start
-  dd iat_end - iat_start
-  db '.idata$5', 0
-  align 4, db 0
-
-  dd RDATA_ADDR + cstring_start - rdata_start
-  dd debug_end - cstring_start
-  db '.rdata', 0
-  align 4, db 0
-
-  dd RDATA_ADDR + link_time_code_gen_start - rdata_start
-  dd link_time_code_gen_end - link_time_code_gen_start
-  db '.rdata$zzzdbg', 0
-  align 4, db 0
-
-  dd RDATA_ADDR + xdata_start - rdata_start
-  dd xdata_end - xdata_start
-  db '.xdata'
-  align 4, db 0
-
-  dd RDATA_ADDR + kernel32_image_start - rdata_start
-  dd kernel32_image_end - kernel32_image_start
-  db '.idata$2', 0
-  align 4, db 0
-
-  dd RDATA_ADDR + null_image_start - rdata_start
-  dd null_image_end - null_image_start
-  db '.idata$3', 0
-  align 4, db 0
-
-  dd RDATA_ADDR + kernel32_imports_start - rdata_start
-  dd kernel32_imports_end - kernel32_imports_start
-  db '.idata$4', 0
-  align 4, db 0
-
-  dd RDATA_ADDR + function_imports_start - rdata_start
-  dd function_imports_end - function_imports_start
-  db '.idata$6', 0
-  align 4, db 0
-
-  dd PDATA_ADDR
-  dd pdata_end - pdata_start
-  db '.pdata', 0
-  align 4, db 0
-
-link_time_code_gen_end:
-xdata_start:
-
-  ; struct UNWIND_INFO
-  db 1 ; VersionAndFlags
-  db 4 ; SizeOfProlog
-  db 1 ; CountOfCodes
-  db 0 ; FrameRegisterAndOffset
-  dd 0x00006204 ; ExceptionHandler
-
-xdata_end:
 images_start:
 kernel32_image_start:
 
@@ -399,19 +286,19 @@ function_imports_start:
 
 import_GetStdHandle:
   ; struct IMAGE_IMPORT_BY_NAME
-  dw 0x02C7 ; Hint
+  dw 0 ; Hint
   db 'GetStdHandle', 0 ; Name
   align 2, db 0
 
 import_WriteConsoleA:
   ; struct IMAGE_IMPORT_BY_NAME
-  dw 0x05E6 ; Hint
+  dw 0 ; Hint
   db 'WriteConsoleA', 0 ; Name
   align 2, db 0
 
 import_ExitProcess:
   ; struct IMAGE_IMPORT_BY_NAME
-  dw 0x0157 ; Hint
+  dw 0 ; Hint
   db 'ExitProcess', 0 ; Name
   align 2, db 0
 
@@ -421,19 +308,6 @@ KERNEL32_dll:
 
 function_imports_end:
 rdata_end:
-
-  align FILE_ALIGNMENT, db 0
-
-pdata_start:
-exception_start:
-
-  ; struct IMAGE_RUNTIME_FUNCTION_ENTRY
-  dd TEXT_ADDR
-  dd TEXT_ADDR + text_end - text_start
-  dd RDATA_ADDR + xdata_start - rdata_start
-
-exception_end:
-pdata_end:
 
   align FILE_ALIGNMENT, db 0
 
