@@ -1,4 +1,4 @@
-; brew install nsam
+; brew install nasm
 ; /usr/local/bin/nasm mach-o.4.s -o out && chmod +x out && ./out; echo $?
 
 ; int main() {

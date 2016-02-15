@@ -1,8 +1,8 @@
-; brew install nsam
+; brew install nasm
 ; /usr/local/bin/nasm mach-o.1.s -o out && chmod +x out && ./out; echo $?
 
-; int main() {
-;   return 3;
+; void main() {
+;   exit(3);
 ; }
 
 bits 64
